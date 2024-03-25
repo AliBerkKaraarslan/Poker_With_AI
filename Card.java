@@ -1,7 +1,8 @@
 public class Card {
 
-    private int suit = 0; //Suit type of the card: 1 (spades (♠)), 2 (diamonds (♦)), 3 (clubs (♣)), 4 (hearts (♥))
-    private int rank = 0; //Rank type of the card: 2, 3, 4, 5, 6, 7, 8, 9, 10, 11(Jack), 12(Queen), 13(King), 14(A)
+    private int suit = 0;   //Suit type of the card: 1 (spades (♠)), 2 (diamonds (♦)), 3 (clubs (♣)), 4 (hearts (♥))
+    private int rank = 0;   //Rank type of the card: 2, 3, 4, 5, 6, 7, 8, 9, 10, 11(Jack), 12(Queen), 13(King), 14(A)
+    private boolean suitRepresentation = true;
 
     //Empty Constructor. Creates null card.
     public Card(){}
@@ -40,7 +41,7 @@ public class Card {
 
     //Returns The String Representation Of The Card.
     public String toString(){
-        return getSuitAsString(true) + getRankAsString(true);
+        return getSuitAsString(suitRepresentation) + getRankAsString(true);
     }
 
     //Returns The String Representation Of Suit. If illustrate boolean is true, then returns suit in emoji form.
@@ -55,6 +56,18 @@ public class Card {
             else if (suit == 4)
                 return "♥";
         }
+
+        else{
+            if (suit == 1)
+                return "$";
+            else if (suit == 2)
+                return "#";
+            else if (suit == 3)
+                return "%";
+            else if (suit == 4)
+                return "&";
+        }
+
         return "" + suit;
     }
 
