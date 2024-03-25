@@ -1,6 +1,8 @@
 # Poker in Java
 Original Texas Hold'em Poker in Java With AI Bots.
 
+![Poker ScreenSchot](https://github.com/AliBerkKaraarslan/Poker_in_Java/assets/126316526/29bbe8ba-c1da-46a2-b19e-3344d293d319)
+
 ## Running The Program
 To run the program, compile and run "Main.java"
 
