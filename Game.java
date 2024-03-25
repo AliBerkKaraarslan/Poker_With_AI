@@ -3,6 +3,7 @@ import java.util.*;
 public class Game {
 
     static boolean debugMode = false;   //When The Debug Mode Is Enabled, All Players' Cards Are Shown.
+    static boolean parentMode = true;
 
     static GameCycle gameCycle = new GameCycle();   //Game Cycle Of The Game.
     private ArrayList<AbstractPlayer> players = new ArrayList<>();  //Stores The Players.
@@ -12,6 +13,9 @@ public class Game {
 
     static HashMap<ArrayList<AbstractPlayer>, Integer> pots = new HashMap<>();   //Stores The Main And Side Pots. Player ArrayList Stores the player those shares the pots.
     private ArrayList<AbstractPlayer> activePlayers;   //Stores The Active Players (i.e. players that does not fold or all in)
+
+    private long amountOfDeciding = 1000;   //Determines the deciding amount of the PokerBots.
+    private long amountOfWaiting = 1000;   //Determines the waiting amount of the PokerBots after they decide.
 
     GUI gui;   //GUI Of The Game.
 
@@ -27,11 +31,20 @@ public class Game {
     //Sets Up The Game. Add Players To Game.
     public void setUpGame(){
 
-        addPlayer("Bot4", 10000, true);
-        addPlayer("Player", 10000, false);
-        addPlayer("Bot1", 10000, true);
-        addPlayer("Bot2", 10000, true);
-        addPlayer("Bot3", 10000, true);
+        if(!parentMode) {
+            addPlayer("Jisoo", 10000, true);
+            addPlayer("Ali Berk", 10000, false);
+            addPlayer("Billie", 10000, true);
+            addPlayer("Lisa", 10000, true);
+            addPlayer("Jennie", 10000, true);
+        }
+        else{
+            addPlayer("Bot4", 10000, true);
+            addPlayer("Player", 10000, false);
+            addPlayer("Bot1", 10000, true);
+            addPlayer("Bot2", 10000, true);
+            addPlayer("Bot3", 10000, true);
+        }
 
         gui = new GUI();  //Setting the gui.
         setUpRound();
@@ -97,7 +110,7 @@ public class Game {
             }
         }
 
-        //Resets Iterator If There Is Less Than 4 Players.
+        //Resets Iterator If There Is Less Than 4 Players. (Its because first 2 players are automatically bets (small and big blinds))
         if(gameCycle.getActivePlayers().size() < 4)
             iter = gameCycle.iterator();
 
@@ -131,23 +144,25 @@ public class Game {
                     int playersOldBet = currPlayer.getTotalBetMade();   //Stores the old bet that player made
                     int playersNewBet = 0;
 
+                    //Gets Decision From The Real Player
                     if(currPlayer instanceof Player)
                         playersNewBet = gui.buttonPanel.getPlayerInput(currPlayer, maxBet);  //Stores the new bet that player made
+
+                    // Gets Decision From The PokerBot
                     else if(currPlayer instanceof PokerBot) {
                         gui.currentPlayer = currPlayer;
-                        playersNewBet = ((PokerBot) currPlayer).getBotInput(maxBet, gameCycle);
 
-                        try {
-                            Thread.sleep(400);
-                        }catch (InterruptedException e) {
-                            throw new RuntimeException(e);
+                        long start = System.currentTimeMillis();
+                        playersNewBet = ((PokerBot) currPlayer).getBotInput(maxBet, gameCycle);
+                        long end = System.currentTimeMillis();
+
+                        if ( (end - start) < amountOfDeciding){
+                            try {Thread.sleep((amountOfDeciding - (end - start)));}
+                            catch (InterruptedException e) {throw new RuntimeException(e);}
                         }
                     }
 
                     //int playersNewBet = currPlayer.makeDecision(maxBet);   //If Player Wants To Play On Terminal.
-
-                    refreshGui();
-
                     //If A Player Raises The Bet, Updates The Max Bet And Reset Other Players Played Flag.
                     if (playersNewBet > maxBet) {
                         maxBet = playersNewBet;
@@ -159,6 +174,11 @@ public class Game {
                         increasePot(maxBet); //Increases the total bet of the round by players' bet difference from previous bet
                     else
                         increasePot(playersNewBet - playersOldBet); //Increases the total bet of the round by players' bet difference from previous bet
+
+                    refreshGui();
+
+                    try {Thread.sleep(amountOfWaiting);}
+                    catch (InterruptedException e) {throw new RuntimeException(e);}
                 }
 
                 //If There Is Only One Player Left Who Does Not Fold.
@@ -281,14 +301,7 @@ public class Game {
             returnedString = returnedString.concat(communityCards.get(i) + " ");
         }
         System.out.println(returnedString);
-
-        try {
-            Thread.sleep(900);
-        }catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
         refreshGui();
-
         return returnedString;
     }
 
