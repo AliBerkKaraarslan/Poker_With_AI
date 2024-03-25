@@ -54,12 +54,6 @@ public class PokerBot extends AbstractPlayer {
 
     public int getBotInput(int maxBet, GameCycle gameCycle){
 
-        try {
-            Thread.sleep(800);
-        }catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
         Iterator<AbstractPlayer> iter = gameCycle.iterator();
         ArrayList<Integer> opponentScores = new ArrayList<>();
 

@@ -3,7 +3,6 @@ import java.util.*;
 public class Game {
 
     static boolean debugMode = false;   //When The Debug Mode Is Enabled, All Players' Cards Are Shown.
-    static boolean parentMode = true;
 
     static GameCycle gameCycle = new GameCycle();   //Game Cycle Of The Game.
     private ArrayList<AbstractPlayer> players = new ArrayList<>();  //Stores The Players.
@@ -31,20 +30,13 @@ public class Game {
     //Sets Up The Game. Add Players To Game.
     public void setUpGame(){
 
-        if(!parentMode) {
-            addPlayer("Jisoo", 10000, true);
-            addPlayer("Ali Berk", 10000, false);
-            addPlayer("Billie", 10000, true);
-            addPlayer("Lisa", 10000, true);
-            addPlayer("Jennie", 10000, true);
-        }
-        else{
-            addPlayer("Bot4", 10000, true);
-            addPlayer("Player", 10000, false);
-            addPlayer("Bot1", 10000, true);
-            addPlayer("Bot2", 10000, true);
-            addPlayer("Bot3", 10000, true);
-        }
+      
+        addPlayer("Bot4", 10000, true);
+        addPlayer("Player", 10000, false);
+        addPlayer("Bot1", 10000, true);
+        addPlayer("Bot2", 10000, true);
+        addPlayer("Bot3", 10000, true);
+        
 
         gui = new GUI();  //Setting the gui.
         setUpRound();

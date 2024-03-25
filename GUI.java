@@ -261,7 +261,6 @@ public class GUI extends JFrame{
                     else
                         g2.drawString("FOLD", x - stringWidth / 2, y - (int)(1.5 * gridSize));
                 }
-                panel.repaint();
             }
         }
 
@@ -357,7 +356,6 @@ public class GUI extends JFrame{
 
         //Paints Desired Amount Of Community Cards.
         public void paintCommunityCards(Graphics g){
-
             if (g instanceof Graphics2D) {
                 Graphics2D g2 = (Graphics2D) g;
 
