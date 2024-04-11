@@ -1,8 +1,15 @@
+//********************************************************************************************************************************************
+// Card.java         Author:Ali Berk Karaarslan     Date:11.04.2024
+//
+// One Of The Classes Of Poker Project
+//********************************************************************************************************************************************
+
+
 public class Card {
 
     private int suit = 0;   //Suit type of the card: 1 (spades (♠)), 2 (diamonds (♦)), 3 (clubs (♣)), 4 (hearts (♥))
     private int rank = 0;   //Rank type of the card: 2, 3, 4, 5, 6, 7, 8, 9, 10, 11(Jack), 12(Queen), 13(King), 14(A)
-    private boolean suitRepresentation = true;
+    private boolean suitRepresentation = true;   //If it is disabled, changes "♠ ♦ ♣ ♥" to "$ # % &".
 
     //Empty Constructor. Creates null card.
     public Card(){}

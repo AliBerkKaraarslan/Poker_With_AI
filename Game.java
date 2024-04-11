@@ -1,8 +1,28 @@
+//********************************************************************************************************************************************
+// Game.java         Author:Ali Berk Karaarslan     Date:11.04.2024
+//
+// One Of The Classes Of Poker Project
+//********************************************************************************************************************************************
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class Game {
 
     static boolean debugMode = false;   //When The Debug Mode Is Enabled, All Players' Cards Are Shown.
+    static boolean showGui = true;   //Enables The GUI.
+    static boolean showLog = false;   //Shows All The Player's Moves.
+    static boolean playOnTerminal = false;   //When It Is Enabled, Player Could Play On Terminal.
+
+    static String logFile = "poker.log";   //Log file of the game.
+
+    private long amountOfDeciding = 800;   //Determines the deciding amount of the PokerBots.
+    private long amountOfWaiting = 800;   //Determines the waiting amount of the PokerBots after they decide.
 
     static GameCycle gameCycle = new GameCycle();   //Game Cycle Of The Game.
     private ArrayList<AbstractPlayer> players = new ArrayList<>();  //Stores The Players.
@@ -13,10 +33,9 @@ public class Game {
     static HashMap<ArrayList<AbstractPlayer>, Integer> pots = new HashMap<>();   //Stores The Main And Side Pots. Player ArrayList Stores the player those shares the pots.
     private ArrayList<AbstractPlayer> activePlayers;   //Stores The Active Players (i.e. players that does not fold or all in)
 
-    private long amountOfDeciding = 1000;   //Determines the deciding amount of the PokerBots.
-    private long amountOfWaiting = 1000;   //Determines the waiting amount of the PokerBots after they decide.
-
     GUI gui;   //GUI Of The Game.
+
+    AbstractPlayer headPlayer;  //Stores the first player of the game.
 
     public Game(){
         setUpGame();
@@ -29,14 +48,15 @@ public class Game {
 
     //Sets Up The Game. Add Players To Game.
     public void setUpGame(){
+        resetLogFile();
 
-      
-        addPlayer("Bot4", 10000, true);
         addPlayer("Player", 10000, false);
         addPlayer("Bot1", 10000, true);
         addPlayer("Bot2", 10000, true);
         addPlayer("Bot3", 10000, true);
-        
+        addPlayer("Bot4", 10000, true);
+
+        headPlayer = gameCycle.first();
 
         gui = new GUI();  //Setting the gui.
         setUpRound();
@@ -47,7 +67,6 @@ public class Game {
         removeEliminatedPlayers();   //Removes The Players With Zero Money.
 
         //Setting Game Cycle
-        gameCycle.rotate();   //Changes The Head Player
         gameCycle.setPlayerRoles();
         clearCommunityCards();  //Clears The Previous Round's Community Cards.
         dealTheCards();
@@ -57,7 +76,17 @@ public class Game {
             gui.gameEnded = true;
             refreshGui();
 
-            System.out.println("GAME ENDED. MADE BY ALI BERK. 2024 MUSIC");
+            System.out.println("GAME ENDED. MADE BY ALI BERK. 2024");
+
+            String currentTime = "[" +LocalTime.now().truncatedTo(ChronoUnit.SECONDS) + "] ";
+            try {
+                PrintWriter writer = new PrintWriter(new FileOutputStream(logFile, true));
+                writer.println(currentTime);
+                writer.println(currentTime + " GAME ENDED. MADE BY ALI BERK. 2024");
+                writer.close();
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
             return;
         }
 
@@ -73,7 +102,7 @@ public class Game {
         refreshGui();
 
         //Starts The Round.
-        playTheRound(100,200);
+        playTheRound(200,400);
     }
 
     //Plays One Round From Start To Finish.
@@ -108,7 +137,6 @@ public class Game {
 
         //Works Until Round Ended.
         while(true) {
-
             //Traverses Through Players.
             while (iter.hasNext()) {
                 AbstractPlayer currPlayer = iter.next();
@@ -122,13 +150,28 @@ public class Game {
                     continue;
                 }
 
-                System.out.println("---------------------------------------------------------------");
-                System.out.println(gameCycle);
-                System.out.println("Total pot: " + pots.values());
-                revealCommunityCards();
-                System.out.println("Max Bet So Far: " + maxBet);
-                System.out.println(currPlayer.getName() + "'s current bet:  " + currPlayer.getTotalBetMade());
-                System.out.println(currPlayer.getName() + "'s cards:  " + currPlayer.getCards());
+                if(showLog){
+                    System.out.println("---------------------------------------------------------------");
+                    System.out.println(gameCycle);
+                    System.out.println("Total pot: " + pots.values());
+                    revealCommunityCards(true);
+                    System.out.println("Max Bet So Far: " + maxBet);
+                    System.out.println(currPlayer.getName() + "'s current bet:  " + currPlayer.getTotalBetMade());
+                    System.out.println(currPlayer.getName() + "'s cards:  " + currPlayer.getCards());
+                }
+                else{
+                    if(playOnTerminal) {
+                        if (currPlayer instanceof Player) {
+                            System.out.println("---------------------------------------------------------------");
+                            System.out.println("Total pot: " + pots.values());
+                            revealCommunityCards(true);
+                            System.out.println("Max Bet So Far: " + maxBet);
+                            System.out.println(currPlayer.getName() + "'s current bet:  " + currPlayer.getTotalBetMade());
+                            System.out.println(currPlayer.getName() + "'s cards:  " + currPlayer.getCards());
+                        }
+                    }
+                    refreshGui();
+                }
 
                 //Gets New Decision From Player, If Player Did Not Play.
                 if (!currPlayer.isPlayed()) {
@@ -137,9 +180,14 @@ public class Game {
                     int playersNewBet = 0;
 
                     //Gets Decision From The Real Player
-                    if(currPlayer instanceof Player)
-                        playersNewBet = gui.buttonPanel.getPlayerInput(currPlayer, maxBet);  //Stores the new bet that player made
+                    if(currPlayer instanceof Player) {
 
+                        //If Player Wants To Play On Terminal.
+                        if(playOnTerminal)
+                            playersNewBet = ((Player)currPlayer).makeDecision(maxBet); //Stores the new bet that player made
+                        else
+                            playersNewBet = gui.buttonPanel.getPlayerInput(currPlayer, maxBet);  //Stores the new bet that player made
+                    }
                     // Gets Decision From The PokerBot
                     else if(currPlayer instanceof PokerBot) {
                         gui.currentPlayer = currPlayer;
@@ -154,7 +202,8 @@ public class Game {
                         }
                     }
 
-                    //int playersNewBet = currPlayer.makeDecision(maxBet);   //If Player Wants To Play On Terminal.
+                    updateLog(currPlayer, maxBet);
+
                     //If A Player Raises The Bet, Updates The Max Bet And Reset Other Players Played Flag.
                     if (playersNewBet > maxBet) {
                         maxBet = playersNewBet;
@@ -226,29 +275,69 @@ public class Game {
     }
 
     //Ends The Round
-    public void endRound(){
-
+    public void endRound() {
         gui.roundEnded = true;
-        gui.buttonPanel.continueNextRound();   //Waits Until Player Presses Continue Button
+
+        //Getting The Continue Agreement
+        //If Player Wants To Play It In Terminal
+        if (playOnTerminal) {
+            Scanner scan = new Scanner(System.in);
+            int input = -1;
+            System.out.println("Press 0 to Continue");
+            while(input != 0)
+                input = scan.nextInt();
+        }
+        else
+            gui.buttonPanel.continueNextRound();   //Waits Until Player Presses Continue Button
 
         //Reset Player Parameters.
-        for(AbstractPlayer currPlayer : players){
+        for (AbstractPlayer currPlayer : players) {
             currPlayer.setPlayed(false);
             currPlayer.setFold(false);
             currPlayer.setAllIn(false);
+            resetPlayerBets();
+            resetPlayerDecisions();
         }
-
         setUpRound();
+    }
 
-        /*If Player Wants To Play It In Terminal*/
-        //Scanner scan = new Scanner(System.in);
-        //System.out.println("Press 0 to Continue");
-        //if(scan.nextInt() == 0)
-        //    setUpRound();
+    //Resets The Log File. Adds Current Time And Developer's Name.
+    public void resetLogFile(){
+        String currentTime = "[" + LocalDate.now() + " " + LocalTime.now().truncatedTo(ChronoUnit.SECONDS) + "] ";
+        try {
+            PrintWriter writer = new PrintWriter(new FileOutputStream(logFile));
+            writer.println(currentTime);
+            writer.println("[" + LocalTime.now().truncatedTo(ChronoUnit.SECONDS) + "] " + "[Poker by Ali Berk Karaarslan. 2024]");
+            writer.println("[" + LocalTime.now().truncatedTo(ChronoUnit.SECONDS) + "] ");
+            writer.close();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    //Updates The Log File (Writes Current Player, Community Cards, Max Bet so far etc.)
+    public void updateLog(AbstractPlayer currPlayer, int maxBet){
+        String currentTime = "[" +LocalTime.now().truncatedTo(ChronoUnit.SECONDS) + "] ";
+
+        try {
+            PrintWriter writer = new PrintWriter(new FileOutputStream(logFile, true));
+            writer.println(currentTime);
+            writer.println(currentTime + "Total pot: " + pots.values());
+            writer.println(currentTime + revealCommunityCards(false));
+            writer.println(currentTime + "Max Bet So Far: " + maxBet);
+            writer.println(currentTime + "\"" + currPlayer.getName() + "\"'s current bet:  " + currPlayer.getTotalBetMade());
+            writer.println(currentTime + "\"" + currPlayer.getName() + "\"'s cards:  " + currPlayer.getCards());
+            writer.println(currentTime + "\"" + currPlayer.getName() + "\"'s move:  " + currPlayer.getDecision());
+            writer.close();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     //Deals The Cards. 5 Community Cards and 2 Card For Each Player.
     public void dealTheCards(){
+        String currentTime = "[" + LocalTime.now().truncatedTo(ChronoUnit.SECONDS) + "] ";
+        PrintWriter writer;
         deck = new Deck();   //Resets The Deck.
         deck.shuffle();
 
@@ -260,6 +349,15 @@ public class Game {
             currPlayer.removeCards();
             currPlayer.giveCard(deck.drawCard());
             currPlayer.giveCard(deck.drawCard());
+
+            //Writes The Player Information On The Log File
+            try {
+                writer = new PrintWriter(new FileOutputStream(logFile, true));
+                writer.println(currentTime + "Name: \"" + currPlayer.getName() + "\", Balance: " + currPlayer.getBalance() + ", Cards: " + currPlayer.getCards());
+                writer.close();
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -286,13 +384,13 @@ public class Game {
     }
 
     //Shows The Community Cards.
-    public String revealCommunityCards(){
+    public String revealCommunityCards(Boolean printText){
         String returnedString = "Community Cards: ";
 
         for(int i = 0; i < communityCards.size() ; i++){
             returnedString = returnedString.concat(communityCards.get(i) + " ");
         }
-        System.out.println(returnedString);
+        if(showLog || playOnTerminal || printText) System.out.println(returnedString);
         refreshGui();
         return returnedString;
     }
@@ -381,7 +479,7 @@ public class Game {
 
     //Calculates Winners And Returns It.
     public void calculateWinners() {
-        revealCommunityCards();
+        revealCommunityCards(false);
 
         Set<ArrayList<AbstractPlayer>> potsSet = pots.keySet();   //Stores The Pots As Set.
 
@@ -457,6 +555,19 @@ public class Game {
 
     //Reveals The Winner
     public void revealWinner(AbstractPlayer winner, int money){
-        System.out.println("WINNER: "+ winner.getName() + winner.getCards() + ", Total Money Won: " + money);
+        String currentTime = "[" +LocalTime.now().truncatedTo(ChronoUnit.SECONDS) + "] ";
+
+        //Writes The Winner On The Log File
+        try {
+            PrintWriter writer = new PrintWriter(new FileOutputStream(logFile, true));
+            writer.println(currentTime);
+            writer.println(currentTime + "WINNER: \""+ winner.getName() + "\", Total Money Won: " + money);
+            writer.println(currentTime);
+            writer.close();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        if(showLog || playOnTerminal) System.out.println("WINNER: "+ winner.getName() + winner.getCards() + ", Total Money Won: " + money);
     }
 }

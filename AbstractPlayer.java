@@ -1,3 +1,9 @@
+//********************************************************************************************************************************************
+// AbstractPlayer.java         Author:Ali Berk Karaarslan     Date:11.04.2024
+//
+// One Of The Classes Of Poker Project
+//********************************************************************************************************************************************
+
 import java.util.ArrayList;
 public class AbstractPlayer {
     private String name = null;   //Stores the name of the Player.
@@ -180,6 +186,13 @@ public class AbstractPlayer {
 
         played=true;
         balance -= amount - totalBetMade;
+
+        //If Player Bets All Of Its Money, (means allin)
+        if(balance == 0) {
+            decision = "allin";
+            allIn = true;
+        }
+
         setTotalBetMade(amount);
         return (amount);
     }

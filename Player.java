@@ -1,3 +1,9 @@
+//********************************************************************************************************************************************
+// Player.java         Author:Ali Berk Karaarslan     Date:11.04.2024
+//
+// One Of The Classes Of Poker Project
+//********************************************************************************************************************************************
+
 import java.util.Scanner;
 
 public class Player extends AbstractPlayer{
@@ -11,7 +17,7 @@ public class Player extends AbstractPlayer{
         super();
     }
 
-    //If Player Wants To Play The Game In Terminal.
+    //Gets Player Input On Terminal.
     public int makeDecision(int maxBet){
         Scanner scan = new Scanner(System.in);
 
@@ -20,17 +26,17 @@ public class Player extends AbstractPlayer{
 
             //If There Is Not Enough Money To Raise Or Call. Player Could Fold Or All-In.
             if(getBalance() <= maxBet - getTotalBetMade()){
-                System.out.println("" + getName() + " (1)fold (4)allin");
+                System.out.println("" + getName() + " (1)fold (3)allin");
             }
             else {
 
                 //If No One Raised The Bet. Player Could Fold, Check Or Raise.
                 if (maxBet == 0)
-                    System.out.println("" + getName() + " (1)fold (2)check (3)raise (4)allin");
+                    System.out.println("" + getName() + " (1)fold (2)check (3)raise");
 
                     //If Someone Raised The Bet. Player Could Fold, Call Or Raise.
                 else
-                    System.out.println("" + getName() + " (1)fold (2)call (3)raise (4)allin");
+                    System.out.println("" + getName() + " (1)fold (2)call (3)raise");
             }
 
             int decision = scan.nextInt(); scan.nextLine(); //Gets the players' decision. Which button did player pressed.
@@ -53,6 +59,8 @@ public class Player extends AbstractPlayer{
 
             //Player Pressed The Raise Button.
             else if(decision == 3){
+                if(maxBet >= getBalance())
+                    return allIn();
 
                 while (true) {
                     System.out.println("Enter number: At least " + 2 * maxBet);
@@ -62,19 +70,14 @@ public class Player extends AbstractPlayer{
                     if(newBet < 2 * maxBet || newBet > getBalance())
                         System.out.println("Wrong Amount Entered. Please Enter Again:");
 
-                        //If Player Raised The Bet To Its Balance (i.e. all in)
+                    //If Player Raised The Bet To Its Balance (i.e. all in)
                     else if(newBet >= getBalance())
                         return allIn();
 
-                        //Player Raised The Bet.
+                    //Player Raised The Bet.
                     else
                         return raise(newBet);
                 }
-            }
-
-            //If Player All-In
-            else if(decision == 4){
-                return allIn();
             }
         }
         return 0;

@@ -1,17 +1,24 @@
+//********************************************************************************************************************************************
+// PokerBot.java         Author:Ali Berk Karaarslan     Date:11.04.2024
+//
+// One Of The Classes Of Poker Project
+//********************************************************************************************************************************************
+
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Random;
 
 public class PokerBot extends AbstractPlayer {
 
-    private int checkCoefficient = 15;
-    private int callCoefficient = 20;
-    private int raiseLowerCoefficient = 30;
-    private int raiseHigherCoefficient = 40;
-    private int allinCoefficient = 45;
+    private int checkCoefficient = 20;
+    private int callCoefficient = 30;
+    private int raiseLowerCoefficient = 50;
+    private int raiseHigherCoefficient = 60;
+    private int allinCoefficient = 65;
 
-    private int smallInterval = 100;
-    private int midInterval = 200;
-    private int largeInterval = 300;
+    private int smallInterval = 50;
+    private int midInterval = 150;
+    private int largeInterval = 500;
 
     //Default Constructor. Creates Player With Name And Balance.
     public PokerBot(String name, int balance){
@@ -32,20 +39,19 @@ public class PokerBot extends AbstractPlayer {
         //Calculates The Expected Score Of The Custom Deck.(i.e. expected score of community cards)
         int score = HandCalculator.calculateExpectedScore(HandCalculator.calculateProbabilities(customDeck, 10000));
 
-        //Multiplies The Expected Card Score With A Coefficient Of Opponents' Move.
-        if(player.getDecision().equals("check")){
-            return (int) (score * ((double)(100 + checkCoefficient) / 100));
-        }
-        else if(player.getDecision().equals("call")){
-            return (int) (score * ((double)(100 + callCoefficient) / 100));
-        }
-        else if(player.getDecision().equals("raise")){
-            double betFraction = (double)player.getTotalBetMade() / (player.getBalance() + player.getTotalBetMade());
-            double calculatedCoefficient = raiseLowerCoefficient + ((raiseHigherCoefficient - raiseLowerCoefficient) * betFraction);
-            return (int) (score * ((double)(100 + calculatedCoefficient) / 100));
-        }
-        else if(player.getDecision().equals("allin")){
-            return (int) (score * ((double)(100 + allinCoefficient) / 100));
+        if(player.getDecision() != null) {
+            //Multiplies The Expected Card Score With A Coefficient Of Opponents' Move.
+            if (player.getDecision().equals("check")) {
+                return (int) (score * ((double) (100 + checkCoefficient) / 100));
+            } else if (player.getDecision().equals("call")) {
+                return (int) (score * ((double) (100 + callCoefficient) / 100));
+            } else if (player.getDecision().equals("raise")) {
+                double betFraction = (double) player.getTotalBetMade() / (player.getBalance() + player.getTotalBetMade());
+                double calculatedCoefficient = raiseLowerCoefficient + ((raiseHigherCoefficient - raiseLowerCoefficient) * betFraction);
+                return (int) (score * ((double) (100 + calculatedCoefficient) / 100));
+            } else if (player.getDecision().equals("allin")) {
+                return (int) (score * ((double) (100 + allinCoefficient) / 100));
+            }
         }
 
         //Returns The Final Expected Score.
@@ -73,65 +79,98 @@ public class PokerBot extends AbstractPlayer {
         int lowerGap = 0;
 
         for(int i = 0; i < opponentScores.size(); i++){
-            if(opponentScores.get(i) - personalScore > upperGap && opponentScores.get(i) - personalScore > 0)
-                upperGap = opponentScores.get(i) - personalScore;
-
-            if(opponentScores.get(i) - personalScore  < lowerGap && opponentScores.get(i) - personalScore < 0)
-                lowerGap = opponentScores.get(i) - personalScore;
+            if(opponentScores.get(i) > personalScore) {
+                if (opponentScores.get(i) - personalScore > upperGap)
+                    upperGap = opponentScores.get(i) - personalScore;
+            }
+            else if(opponentScores.get(i) < personalScore) {
+                if (opponentScores.get(i) - personalScore < lowerGap)
+                    lowerGap = personalScore - opponentScores.get(i);
+            }
         }
 
-        int maxGap;
-        if(upperGap > Math.abs(lowerGap))
+        boolean threat = false;
+        int maxGap = lowerGap;
+
+        if(upperGap > lowerGap) {
+            threat = true;
             maxGap = upperGap;
-        else
-            maxGap = lowerGap;
+        }
 
         //Make A Decision Due To Max Gap Between Opponents
-        if(Math.abs(maxGap) >= largeInterval){
-
-            if(maxGap<0)
-                //return allIn();
+        if(maxGap >= largeInterval){
+            if(threat)
                 return fold();
             else
-                return fold();
+                return allIn();
+        }
+        else if(maxGap >= midInterval){
+            if(threat) {
+                if (maxBet == 0)
+                    return check();
+                else
+                    return fold();
+            }
+            else
+                return calculateRaise(maxBet, maxGap);
 
         }
-        else if(Math.abs(maxGap) >= midInterval){
-//            if(maxGap<0){
-//            }
-//            else{
-//
-//            }
-
-            if(maxBet == 0)
+        else if(maxGap >= smallInterval){
+            if (maxBet == 0)
                 return check();
-
             else
                 return call(maxBet);
-        }
-        else if(Math.abs(maxGap) >= smallInterval){
-
-            if(maxBet == 0)
-                return check();
-
-            else
-                return call(maxBet);
-
         }
         else{
-//            if(maxGap<0){
-//
-//            }
-//            else{
-//
-//            }
 
-            if(maxBet == 0)
-                return check();
+            Random generator = new Random();
+            int randomNum = generator.nextInt(1000);
+            //AllIn
+            if(randomNum<7){
+                return allIn();
+            }
+            //Fold
+            else if (randomNum<100){
+                return fold();
+            }
+            //Raise
+            else if(randomNum<200){
+                return calculateRaise(maxBet, maxGap);
+            }
+            //Check/Call
+            else{
+                if (maxBet == 0)
+                    return check();
+                else
+                    return call(maxBet);
+            }
+        }
+    }
 
+    public int calculateRaise(int maxBet, int maxGap){
+        if(maxGap >=  ((double) 3/4) * midInterval) {
+            if(getBalance()/10 > 2 *maxBet)
+                return raise(getBalance()/10);
             else
                 return call(maxBet);
         }
-
+        else if(maxGap >= ((double)2/4) * midInterval) {
+            if(getBalance()/15 > 2 * maxBet)
+                return raise(getBalance()/15);
+            else
+                return call(maxBet);
+        }
+        else if(maxGap >= ((double)1/4) * midInterval) {
+            if(getBalance()/20 > 2 * maxBet)
+                return raise(getBalance()/20);
+            else
+                return call(maxBet);
+        }
+        else{
+            if (maxBet == 0)
+                return check();
+            else
+                return call(maxBet);
+        }
     }
 }

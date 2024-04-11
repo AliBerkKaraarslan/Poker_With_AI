@@ -1,3 +1,9 @@
+//********************************************************************************************************************************************
+// GUI.java         Author:Ali Berk Karaarslan     Date:11.04.2024
+//
+// One Of The Classes Of Poker Project
+//********************************************************************************************************************************************
+
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -24,8 +30,8 @@ public class GUI extends JFrame{
 
     public GUI(){
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-
-        //panel = new MainPanel();
+        setTitle("Poker by Ali Berk Karaarslan");
+        setResizable(false);
         add(panel);
 
         add(buttonPanel, BorderLayout.SOUTH);
@@ -34,7 +40,9 @@ public class GUI extends JFrame{
         setLocationRelativeTo(null);
 
         getContentPane().setLayout(null);
-        setVisible(true);
+
+        if(Game.showGui)
+            setVisible(true);
     }
 
     //Paints All The Components Of The Game. Cards, Bets, Winners etc.
@@ -581,6 +589,7 @@ public class GUI extends JFrame{
                 if (player.getBalance() <= maxBet - player.getTotalBetMade()) {
                     foldButton.setVisible(true);
                     raiseButton.setVisible(true);
+                    raiseButton.setText("ALL IN");
                 }
                 else {
 
@@ -649,7 +658,7 @@ public class GUI extends JFrame{
                 int newBet = slider.getValue();   //Gets The Desired Raise Amount.
 
                 //If Player Raised The Bet To Its Balance (i.e. all in)
-                if(newBet >= player.getBalance())
+                if(newBet >= player.getBalance() || raiseButton.getText().equals("ALL IN"))
                     return player.allIn();
 
                 //Player Raised The Bet.
