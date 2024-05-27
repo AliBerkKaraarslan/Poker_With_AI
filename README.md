@@ -25,5 +25,6 @@ Ali Berk Karaarslan
 2024
 
 ##
-![Poker ScreenSchot](https://github.com/AliBerkKaraarslan/Poker_in_Java/assets/126316526/29bbe8ba-c1da-46a2-b19e-3344d293d319)
+![Poker ScreenShot](https://github.com/AliBerkKaraarslan/Poker_With_AI/assets/126316526/80f3b875-cc09-4d3b-b880-0f923d4d1eec)
+
 
